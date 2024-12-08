@@ -58,7 +58,7 @@ def crypto_history(symbol, period):
     output = io.BytesIO()
     plt.savefig(output, format='png')
     output.seek(0)
-    img = plt.imread(output)
+    img = output.getvalue()
     return t_max, t_min, t_vol, img
 
 
