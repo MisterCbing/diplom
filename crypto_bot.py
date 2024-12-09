@@ -1,3 +1,5 @@
+
+
 from imports import *
 
 dp = Dispatcher(storage=MemoryStorage())
@@ -41,8 +43,8 @@ async def send_review(message: Message, state: FSMContext):
     await message.answer(t_max)
     await message.answer(t_min)
     await message.answer(t_vol, reply_markup=kb)
-    with open('graph.png', 'rb') as photo:
-        await message.reply_photo(photo)
+    photo = FSInputFile('graph.png')
+    await message.reply_photo(photo)
     await state.clear()
 
 
