@@ -2,7 +2,6 @@ from imports import *
 
 dp = Dispatcher(storage=MemoryStorage())
 
-
 class CryptoState(StatesGroup):
     crypto_currency = State()
     time_period = State()
@@ -38,11 +37,12 @@ async def send_review(message: Message, state: FSMContext):
     await message.answer("Минутку, ваш запрос обрабатывается", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
     symbol, period = data['crypto_currency'] + 'USDT', data['time_period']
-    t_max, t_min, t_vol, output = crypto_history(symbol, period)
+    t_max, t_min, t_vol = crypto_history(symbol, period)
     await message.answer(t_max)
     await message.answer(t_min)
     await message.answer(t_vol, reply_markup=kb)
-    await message.reply_photo(output)
+    with open('graph.png', 'rb') as photo:
+        await message.reply_photo(photo)
     await state.clear()
 
 

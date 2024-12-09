@@ -55,11 +55,8 @@ def crypto_history(symbol, period):
     plt.title(f'График стоимости {symbol} с {str(df['Time'].iloc[0])[:16]} по {str(df['Time'].iloc[-1])[:16]}')
     plt.tick_params(axis='x', labelrotation=90)
     plt.tight_layout()
-    output = io.BytesIO()
-    plt.savefig(output, format='png')
-    output.seek(0)
-    img = output.getvalue()
-    return t_max, t_min, t_vol, img
+    plt.savefig('graph.png')
+    return t_max, t_min, t_vol
 
 
 def volatility(period):
