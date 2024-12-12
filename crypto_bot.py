@@ -42,9 +42,9 @@ async def send_review(message: Message, state: FSMContext):
     t_max, t_min, t_vol = crypto_history(symbol, period)
     await message.answer(t_max)
     await message.answer(t_min)
-    await message.answer(t_vol, reply_markup=kb)
+    await message.answer(t_vol)
     photo = FSInputFile('graph.png')
-    await message.reply_photo(photo)
+    await message.reply_photo(photo, reply_markup=kb)
     await state.clear()
 
 
