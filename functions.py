@@ -73,8 +73,8 @@ def volatility(period):
     threads = []
     for c in currencies:
         threads.append(Thread(target=process_request, args=c, daemon=True))
+        threads[-1].start()
     for t in threads:
-        t.start()
         t.join()
 
     vol = sorted(list(vol.items()), key=lambda item: item[1])
