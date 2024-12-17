@@ -12,14 +12,17 @@ class CryptoState(StatesGroup):
 class Volatility(StatesGroup):
     time_period = State()
 
-
+# Обработка команды /start
 @dp.message(CommandStart())
 async def command_start_handler(message: Message):
     await message.answer(f"Привет, {html.bold(message.from_user.full_name)}! Я криптовалютный бот.")
     await message.answer('Нажми кнопку "Обзор рынка", чтобы узнать ситуацию на рынке или "Волатильность", '
                          'чтобы узнать волатильность крупнейших криптовалют', reply_markup=kb)
 
-
+#Машина состояний для обработки нажатия кнопки Машина состояний для нажатой кнопки «Обзор рынка». Последовательно
+# выводятся меню, позволяющие выбрать анализируемые криптовалюту и временной период, которые передаются в функцию
+# crypto_history, после чего текстовые сообщения, возвращённые данной функцией, а также сохранённый файл graph.png
+# выводятся пользователю в виде нескольких отдельных сообщений.
 @dp.message(F.text.lower() == 'обзор рынка')
 async def set_cur(message: Message, state: FSMContext):
     await message.answer("Выберите криптовалюту", reply_markup=kb1)
@@ -32,7 +35,8 @@ async def set_time(message: Message, state: FSMContext):
     await message.answer("Выберите временной период", reply_markup=kb2)
     await state.set_state(CryptoState.time_period)
 
-
+# Машина состояний для нажатой кнопки «Волатильность». Возникающее меню позволяет выбрать временной период для анализа,
+# после чего он передаётся в функцию volatility, результат которой выводится пользователю в виде текстовых сообщений.
 @dp.message(F.text, CryptoState.time_period)
 async def send_review(message: Message, state: FSMContext):
     await state.update_data(time_period=message.text)
@@ -55,7 +59,7 @@ async def review_volatility(message: Message, state: FSMContext):
 
 
 @dp.message(F.text, Volatility.time_period)
-async def send_review(message: Message, state: FSMContext):
+async def send_volatility(message: Message, state: FSMContext):
     await state.update_data(time_period=message.text)
     await message.answer("Минутку, ваш запрос обрабатывается", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
@@ -66,12 +70,14 @@ async def send_review(message: Message, state: FSMContext):
     await state.clear()
 
 
+#Обработка текстовых сообщений "стоп" и "stop", если пользователь хочет остановить работу бота.
 @dp.message(or_f(F.text.lower() == 'стоп', F.text.lower() == 'stop'))
 async def ending(message: Message):
     await message.answer("Бот выключен")
     await sys.exit(0)
 
 
+#Обработка любой команды, которая неизвестна боту.
 @dp.message()
 async def default_answer(message: Message):
     await message.answer('Введите команду /start, чтобы начать общение.')
