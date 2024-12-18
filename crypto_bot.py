@@ -25,7 +25,7 @@ async def command_start_handler(message: Message):
 # выводятся пользователю в виде нескольких отдельных сообщений.
 @dp.message(F.text.lower() == 'обзор рынка')
 async def set_cur(message: Message, state: FSMContext):
-    await message.answer("Выберите криптовалюту", reply_markup=kb1)
+    await message.answer("Выберите криптовалюту кнопкой или введите тикет буквами", reply_markup=kb1)
     await state.set_state(CryptoState.crypto_currency)
 
 
@@ -42,8 +42,13 @@ async def send_review(message: Message, state: FSMContext):
     await state.update_data(time_period=message.text)
     await message.answer("Минутку, ваш запрос обрабатывается", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
-    symbol, period = data['crypto_currency'] + 'USDT', data['time_period']
-    t_max, t_min, t_vol = crypto_history(symbol, period)
+    symbol, period = data['crypto_currency'].upper() + 'USDT', data['time_period']
+    try:
+        t_max, t_min, t_vol = crypto_history(symbol, period)
+    except:
+        await state.clear()
+        await message.answer('Что-то пошло не так, возможно вы ввели недопустимую команду.'
+                             'Давайте начнём всё с начала.', reply_markup=kb)
     await message.answer(t_max)
     await message.answer(t_min)
     await message.answer(t_vol)
@@ -64,7 +69,12 @@ async def send_volatility(message: Message, state: FSMContext):
     await message.answer("Минутку, ваш запрос обрабатывается", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
     period = data['time_period']
-    v_max, v_min = volatility(period)
+    try:
+        v_max, v_min = volatility(period)
+    except:
+        await state.clear()
+        await message.answer('Что-то пошло не так, возможно вы ввели недопустимую команду.'
+                             'Давайте начнём всё с начала.', reply_markup=kb)
     await message.answer(v_max)
     await message.answer(v_min, reply_markup=kb)
     await state.clear()
