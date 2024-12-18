@@ -1,8 +1,8 @@
-
-
 from imports import *
 
 dp = Dispatcher(storage=MemoryStorage())
+
+possible_periods = ['1m','3m','5m','15m','30m','1h','2h','4h','6h','8h','12h','1d','3d','1w','1M']
 
 class CryptoState(StatesGroup):
     crypto_currency = State()
@@ -11,9 +11,6 @@ class CryptoState(StatesGroup):
 
 class Volatility(StatesGroup):
     time_period = State()
-
-period_dic = {'1m': '1 минута', '5m': '5 минут', '30m': '30 минут', '1h': '1 час',
-              '4h': '4 часа', '1d': '1 день'}
 
 # Обработка команды /start
 @dp.message(CommandStart())
@@ -46,23 +43,21 @@ async def send_review(message: Message, state: FSMContext):
     await message.answer("Минутку, ваш запрос обрабатывается", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
     symbol, period = data['crypto_currency'].upper() + 'USDT', data['time_period']
-    if period not in period_dic.keys():
-        await state.clear()
-        await message.answer('С таким периодом бот не работает. Если он нужен - обратитесь к разработчику. '
-                             'Давайте начнём всё с начала.', reply_markup=kb)
-    else:
-        try:
+    try:
+        if period in possible_periods and symbol.isalpha():
             t_max, t_min, t_vol = crypto_history(symbol, period)
-        except:
+            await message.answer(t_max)
+            await message.answer(t_min)
+            await message.answer(t_vol)
+            photo = FSInputFile('graph.png')
+            await message.reply_photo(photo, reply_markup=kb)
             await state.clear()
-            await message.answer('Что-то пошло не так, возможно вы ввели недопустимую команду.'
-                                 'Давайте начнём всё с начала.', reply_markup=kb)
-        await message.answer(t_max)
-        await message.answer(t_min)
-        await message.answer(t_vol)
-        photo = FSInputFile('graph.png')
-        await message.reply_photo(photo, reply_markup=kb)
+        else:
+            raise ValueError
+    except:
         await state.clear()
+        await message.answer('Что-то пошло не так, возможно вы ввели недопустимую команду.'
+                             'Давайте начнём всё с начала.', reply_markup=kb)
 
 
 @dp.message(F.text.lower() == 'волатильность')
@@ -77,20 +72,18 @@ async def send_volatility(message: Message, state: FSMContext):
     await message.answer("Минутку, ваш запрос обрабатывается", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
     period = data['time_period']
-    if period not in period_dic.keys():
-        await state.clear()
-        await message.answer('С таким периодом бот не работает. Если он нужен - обратитесь к разработчику. '
-                             'Давайте начнём всё с начала.', reply_markup=kb)
-    else:
-        try:
+    try:
+        if period in possible_periods:
             v_max, v_min = volatility(period)
-        except:
+            await message.answer(v_max)
+            await message.answer(v_min, reply_markup=kb)
             await state.clear()
-            await message.answer('Что-то пошло не так, возможно вы ввели недопустимую команду.'
-                                 'Давайте начнём всё с начала.', reply_markup=kb)
-        await message.answer(v_max)
-        await message.answer(v_min, reply_markup=kb)
+        else:
+            raise ValueError
+    except:
         await state.clear()
+        await message.answer('Что-то пошло не так, возможно вы ввели недопустимую команду.'
+                             'Давайте начнём всё с начала.', reply_markup=kb)
 
 
 #Обработка текстовых сообщений "стоп" и "stop", если пользователь хочет остановить работу бота.
