@@ -12,6 +12,9 @@ class CryptoState(StatesGroup):
 class Volatility(StatesGroup):
     time_period = State()
 
+period_dic = {'1m': '1 минута', '5m': '5 минут', '30m': '30 минут', '1h': '1 час',
+              '4h': '4 часа', '1d': '1 день'}
+
 # Обработка команды /start
 @dp.message(CommandStart())
 async def command_start_handler(message: Message):
@@ -43,18 +46,23 @@ async def send_review(message: Message, state: FSMContext):
     await message.answer("Минутку, ваш запрос обрабатывается", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
     symbol, period = data['crypto_currency'].upper() + 'USDT', data['time_period']
-    try:
-        t_max, t_min, t_vol = crypto_history(symbol, period)
-    except:
+    if period not in period_dic.keys():
         await state.clear()
-        await message.answer('Что-то пошло не так, возможно вы ввели недопустимую команду.'
+        await message.answer('С таким периодом бот не работает. Если он нужен - обратитесь к разработчику. '
                              'Давайте начнём всё с начала.', reply_markup=kb)
-    await message.answer(t_max)
-    await message.answer(t_min)
-    await message.answer(t_vol)
-    photo = FSInputFile('graph.png')
-    await message.reply_photo(photo, reply_markup=kb)
-    await state.clear()
+    else:
+        try:
+            t_max, t_min, t_vol = crypto_history(symbol, period)
+        except:
+            await state.clear()
+            await message.answer('Что-то пошло не так, возможно вы ввели недопустимую команду.'
+                                 'Давайте начнём всё с начала.', reply_markup=kb)
+        await message.answer(t_max)
+        await message.answer(t_min)
+        await message.answer(t_vol)
+        photo = FSInputFile('graph.png')
+        await message.reply_photo(photo, reply_markup=kb)
+        await state.clear()
 
 
 @dp.message(F.text.lower() == 'волатильность')
@@ -69,15 +77,20 @@ async def send_volatility(message: Message, state: FSMContext):
     await message.answer("Минутку, ваш запрос обрабатывается", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
     period = data['time_period']
-    try:
-        v_max, v_min = volatility(period)
-    except:
+    if period not in period_dic.keys():
         await state.clear()
-        await message.answer('Что-то пошло не так, возможно вы ввели недопустимую команду.'
+        await message.answer('С таким периодом бот не работает. Если он нужен - обратитесь к разработчику. '
                              'Давайте начнём всё с начала.', reply_markup=kb)
-    await message.answer(v_max)
-    await message.answer(v_min, reply_markup=kb)
-    await state.clear()
+    else:
+        try:
+            v_max, v_min = volatility(period)
+        except:
+            await state.clear()
+            await message.answer('Что-то пошло не так, возможно вы ввели недопустимую команду.'
+                                 'Давайте начнём всё с начала.', reply_markup=kb)
+        await message.answer(v_max)
+        await message.answer(v_min, reply_markup=kb)
+        await state.clear()
 
 
 #Обработка текстовых сообщений "стоп" и "stop", если пользователь хочет остановить работу бота.
